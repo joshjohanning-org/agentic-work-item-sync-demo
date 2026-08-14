@@ -2,6 +2,9 @@
 name: Work Item Sync Preview
 emoji: 🔄
 description: Preview a Digital.ai Agility work item sync when a label is applied
+engine:
+  id: copilot
+  model: auto
 on:
   label_command: preview-agility-sync
 permissions:
