@@ -34,7 +34,7 @@ permissions:
 
 ## Try it
 
-Open the [sample issue](../../issues/1), then apply the `preview-jira-refresh` label. The workflow reads `.demo/jira/SHIP-123.json` and posts the proposed Jira-to-GitHub changes.
+Open the [sample issue](../../issues/2), then apply the `preview-jira-refresh` label. The workflow reads `.demo/jira/SHIP-123.json` and posts the proposed Jira-to-GitHub changes.
 
 To create another example:
 
