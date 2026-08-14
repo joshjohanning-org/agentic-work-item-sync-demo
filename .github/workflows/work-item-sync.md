@@ -3,7 +3,7 @@ name: Work Item Sync Preview
 emoji: 🔄
 description: Preview a Digital.ai Agility work item sync when a label is applied
 on:
-  label_command: sync-to-agility
+  label_command: preview-agility-sync
 permissions:
   contents: read
   issues: read
@@ -22,7 +22,7 @@ safe-outputs:
 
 ## Task
 
-The `sync-to-agility` label was applied to a GitHub issue. Act as a work item synchronization planner for GitHub Issues and Projects to Digital.ai Agility.
+The `preview-agility-sync` label was applied to a GitHub issue. Act as a work item synchronization planner for GitHub Issues and Projects to Digital.ai Agility.
 
 Read the triggering issue from the sanitized event context. If needed, use read-only GitHub tools to inspect its labels, assignees, milestone, parent issue, sub-issues, and project fields.
 

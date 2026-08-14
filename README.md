@@ -5,7 +5,7 @@ This public demo shows how a GitHub label can trigger an AI-assisted work item s
 ## Demo flow
 
 1. Open a GitHub issue that represents a work item.
-2. Apply the `sync-to-agility` label.
+2. Apply the `preview-agility-sync` label.
 3. The label starts the `work-item-sync` agentic workflow and is automatically removed so it can be used again.
 4. Copilot analyzes the issue, produces a normalized Digital.ai Agility-style payload, and posts a sync preview as an issue comment.
 5. The preview includes field mappings, hierarchy and dependency notes, validation warnings, and the API operation an integration adapter would perform.
@@ -44,7 +44,7 @@ Add reusable shipment notification preferences.
 - Parent: GH-100
 ```
 
-Apply the `sync-to-agility` label and watch the Actions run.
+Apply the `preview-agility-sync` label and watch the Actions run.
 
 ## Production extension
 
