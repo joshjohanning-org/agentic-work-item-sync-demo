@@ -40,13 +40,13 @@ steps:
         curl --fail-with-body --silent --show-error \
           --user "$JIRA_EMAIL:$JIRA_TOKEN" \
           --header "Accept: application/json" \
-          "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY?fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,updated,customfield_10206,customfield_10020,customfield_10208,customfield_10209,customfield_10001,customfield_10210,customfield_10211" \
+          "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY?fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,updated,customfield_10218,customfield_10020,customfield_10222,customfield_10221,customfield_10001,customfield_10220,customfield_10219" \
           > /tmp/gh-aw/agent/jira-issue.json
       else
         curl --fail-with-body --silent --show-error \
           --header "Authorization: Bearer $JIRA_TOKEN" \
           --header "Accept: application/json" \
-          "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY?fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,updated,customfield_10206,customfield_10020,customfield_10208,customfield_10209,customfield_10001,customfield_10210,customfield_10211" \
+          "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY?fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,updated,customfield_10218,customfield_10020,customfield_10222,customfield_10221,customfield_10001,customfield_10220,customfield_10219" \
           > /tmp/gh-aw/agent/jira-issue.json
       fi
 network:
@@ -67,6 +67,14 @@ safe-outputs:
     allowed-fields: [Priority, Effort]
     max: 2
     target: "*"
+  update-project:
+    project: https://github.com/orgs/joshjohanning-org/projects/26
+    max: 1
+    github-app:
+      client-id: ${{ vars.PROJECT_APP_CLIENT_ID }}
+      private-key: ${{ secrets.PROJECT_APP_PRIVATE_KEY }}
+      owner: joshjohanning-org
+      repositories: [agentic-work-item-sync-demo]
 ---
 
 # Sync GitHub Issue from Jira
@@ -105,5 +113,19 @@ Use `set_issue_field` for the triggering issue:
 
 - Set `Priority` from Jira priority when Jira provides one.
 - Set `Effort` from Jira Story Pts: 1-2 → Low, 3-5 → Medium, 8 or more → High. Omit Effort when Story Pts is unavailable.
+
+Use `update_project` exactly once with:
+
+- `project`: `https://github.com/orgs/joshjohanning-org/projects/26`
+- `content_type`: `issue`
+- `content_number`: the triggering GitHub issue number
+- `fields` containing only values available from Jira:
+  - `Status`: Jira Backlog, Open, or To Do → `Todo`; In Progress or Selected for Development → `In progress`; Done, Closed, or Resolved → `Done`
+  - `PI`: Jira PI
+  - `Iteration`: Jira Sprint title
+  - `Source`: Jira Source, meaning work origin
+  - `Team`: Jira Team
+  - `Requested by`: Jira Requested by
+  - `Product category`: Jira Product category
 
 Do not write to Jira. Do not invent mappings or IDs. Use `Not mapped` when Jira does not provide a value. Call `noop` with a short reason if the Jira response is invalid.

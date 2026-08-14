@@ -56,3 +56,18 @@ jobs:
             --header "Accept: application/json" \
             "$JIRA_BASE_URL/rest/api/3/issue/GHAW-1/editmeta" \
             | jq -r '.fields | to_entries[] | [.key, .value.name] | @tsv'
+
+          echo "SYNC FIELD METADATA"
+          curl --fail-with-body --silent --show-error \
+            "${AUTH_ARGS[@]}" \
+            --header "Accept: application/json" \
+            "$JIRA_BASE_URL/rest/api/3/issue/GHAW-1/editmeta" \
+            | jq '{
+                PI: .fields.customfield_10218,
+                product_category: .fields.customfield_10219,
+                requested_by: .fields.customfield_10220,
+                source: .fields.customfield_10221,
+                story_pts: .fields.customfield_10222,
+                team: .fields.customfield_10001,
+                priority: .fields.priority
+              }'

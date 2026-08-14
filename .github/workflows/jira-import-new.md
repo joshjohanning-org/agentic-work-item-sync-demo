@@ -35,7 +35,7 @@ steps:
         --get \
         --data-urlencode "jql=project = GHAW ORDER BY created DESC" \
         --data-urlencode "maxResults=10" \
-        --data-urlencode "fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,created,updated,customfield_10206,customfield_10020,customfield_10208,customfield_10209,customfield_10001,customfield_10210,customfield_10211" \
+        --data-urlencode "fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,created,updated,customfield_10218,customfield_10020,customfield_10222,customfield_10221,customfield_10001,customfield_10220,customfield_10219" \
         "$JIRA_BASE_URL/rest/api/3/search/jql" \
         > /tmp/gh-aw/agent/jira-issues.json
 network:
@@ -52,6 +52,14 @@ safe-outputs:
     allowed-fields: [Priority, Effort]
     max: 20
     target: "*"
+  update-project:
+    project: https://github.com/orgs/joshjohanning-org/projects/26
+    max: 10
+    github-app:
+      client-id: ${{ vars.PROJECT_APP_CLIENT_ID }}
+      private-key: ${{ secrets.PROJECT_APP_PRIVATE_KEY }}
+      owner: joshjohanning-org
+      repositories: [agentic-work-item-sync-demo]
 ---
 
 # Import New Jira Issues
@@ -78,7 +86,19 @@ For at most three Jira items that do not yet have a GitHub issue, call `create_i
 For Jira items that already have a GitHub issue:
 
 1. Use `set_issue_field` to refresh Priority and Effort with the same mappings.
+2. Use `update_project` with:
+   - `project`: `https://github.com/orgs/joshjohanning-org/projects/26`
+   - `content_type`: `issue`
+   - `content_number`: the existing GitHub issue number
+   - `fields` containing only values available from Jira:
+     - `Status`: Jira Backlog, Open, or To Do → `Todo`; In Progress or Selected for Development → `In progress`; Done, Closed, or Resolved → `Done`
+     - `PI`: Jira PI
+     - `Iteration`: Jira Sprint title
+     - `Source`: Jira Source, meaning work origin
+     - `Team`: Jira Team
+     - `Requested by`: Jira Requested by
+     - `Product category`: Jira Product category
 
 Preserve Jira facts. Do not invent values. Use `Not mapped` for unavailable fields.
 
-Do not create duplicates. Call `noop` only when the Jira response is invalid or no create/update action is needed.
+Do not create duplicates. Newly created issues receive project fields on the next scheduled or manually dispatched run. Call `noop` only when the Jira response is invalid or no create/update action is needed.
