@@ -1,11 +1,12 @@
 ---
-name: Jira Source Refresh Preview
+name: Sync GitHub Issue from Jira
 emoji: 🔄
-description: Compare a Jira source record with a GitHub developer work item
+description: Refresh Jira-owned fields while preserving GitHub developer content
 engine: copilot
 model: auto
+max-ai-credits: 25
 on:
-  label_command: preview-jira-refresh
+  label_command: sync-from-jira
 permissions:
   contents: read
   issues: read
@@ -53,33 +54,47 @@ network:
     - defaults
     - joshjohanning.atlassian.net
 safe-outputs:
-  add-comment:
+  update-issue:
+    title:
+    body:
+    max: 1
+    target: triggering
+  add-labels:
+    allowed: [jira-synced]
     max: 1
     target: triggering
 ---
 
-# Jira Source Refresh Preview
+# Sync GitHub Issue from Jira
 
 ## Task
 
-The `preview-jira-refresh` label was applied to a GitHub issue. Act as a work item synchronization planner where Jira is the source of truth and GitHub is the developer workspace.
+The `sync-from-jira` label was applied to a GitHub issue. Jira is the source of truth and GitHub is the developer workspace.
 
 Read the triggering issue from the sanitized event context. Read the normalized Jira Cloud API response from `/tmp/gh-aw/agent/jira-issue.json`.
 
-Treat these Jira fields as authoritative: summary, issue type, status, priority, project, team, assignee, parent, dependencies, and Jira URL.
+Treat these Jira fields as authoritative: key, summary, issue type, status, priority, project, assignee, parent, issue links, labels, updated time, and Jira URL.
 
-Treat developer notes, implementation details, local checklists, links, and issue discussion as GitHub-owned. Do not recommend deleting or overwriting GitHub-owned content.
+Treat developer notes, implementation details, local checklists, links, and issue discussion as GitHub-owned. Preserve them exactly.
 
-Create one comment on the triggering issue with:
+Use `update_issue` exactly once:
 
-1. `### Jira source refresh preview`
-2. The Jira key, source URL, and a clear statement that Jira remains authoritative.
-3. A comparison table with Jira value, current GitHub value, owner, and proposed action for title, type, status, priority, project, team, assignee, parent, and dependencies.
-4. `### Proposed GitHub changes` listing only fields that differ.
-5. `### Preserved GitHub content` listing developer-owned content that must remain unchanged.
-6. A fenced `json` block containing `sourceSystem`, `sourceKey`, `targetSystem`, `authoritativeFields`, `proposedChanges`, and `preservedFields`.
-7. `### Integration boundary` stating that this run read Jira Cloud, did not write to Jira, and did not update the GitHub issue.
+1. Set the title to `[<Jira key>] <Jira summary>`.
+2. Set `operation` to `replace-island`.
+3. Set the body to a concise `## Jira source` section containing:
+   - Jira key and link
+   - issue type
+   - status
+   - priority
+   - project
+   - assignee
+   - parent
+   - issue links or dependencies
+   - Jira updated timestamp
+   - a note that Jira owns this section
 
-Preserve facts from both records. Do not invent mappings or IDs. Use `Not mapped` or `null` when unavailable.
+The replace-island operation must only replace this workflow's managed section. Do not include or rewrite GitHub-owned developer content in the update body.
 
-Use the `add_comment` safe output exactly once. Call `noop` with a short reason if the Jira response is invalid or no meaningful comparison can be made.
+Use `add_labels` to add `jira-synced`.
+
+Do not write to Jira. Do not invent mappings or IDs. Use `Not mapped` when Jira does not provide a value. Call `noop` with a short reason if the Jira response is invalid.

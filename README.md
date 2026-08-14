@@ -1,25 +1,46 @@
-# Agentic work item sync demo
+# Jira to GitHub agentic sync demo
 
-This public demo shows a label-triggered, AI-assisted synchronization pattern where **Jira is the system of record** and **GitHub is the developer workspace**.
+This public demo models **Jira as the source of truth** and **GitHub as the developer workspace**.
 
-## Demo flow
+## Workflows
 
-1. A GitHub issue references a Jira key such as `GHAW-1`.
-2. Apply the `preview-jira-refresh` label.
-3. The label starts the `jira-source-preview` agentic workflow and is automatically removed so it can be used again.
-4. A trusted workflow step reads the source issue from Jira Cloud using `secrets.JIRA_TOKEN`.
-5. Copilot compares Jira-owned fields with the GitHub issue and posts a refresh preview.
+### Import new Jira issues
 
-The preview separates:
+`.github/workflows/jira-import-new.md` runs every six hours and supports manual dispatch.
 
-- **Jira-owned fields:** title, work item type, status, priority, project, team, assignee, parent, and dependencies
-- **GitHub-owned fields:** developer notes, implementation details, local checklists, links, and discussion
+It:
 
-The workflow reads Jira but does not write to Jira or overwrite the GitHub issue. It demonstrates the source-of-truth direction and the field ownership model before constrained GitHub updates are enabled.
+1. Reads recent issues from the Jira `GHAW` project.
+2. Searches GitHub for existing issues containing each Jira key.
+3. Creates up to three missing GitHub issues.
+4. Adds a Jira-owned source section and a GitHub-owned developer notes section.
+
+### Sync from Jira on command
+
+`.github/workflows/jira-sync-on-command.md` runs when someone applies the `sync-from-jira` label.
+
+It:
+
+1. Extracts the `GHAW-*` Jira key from the GitHub issue.
+2. Reads the current Jira issue.
+3. Updates the GitHub title and the workflow-managed Jira source section.
+4. Preserves developer notes, implementation details, checklists, links, and discussion.
+5. Adds the `jira-synced` label.
+
+The command label is automatically removed after each run so it can be applied again.
+
+## Field ownership
+
+| Owner | Fields |
+|---|---|
+| Jira | Key, summary, type, status, priority, project, assignee, parent, dependencies, labels, timestamps |
+| GitHub | Developer notes, implementation details, checklists, links, pull requests, and discussion |
+
+The demo only reads Jira. It never writes changes back to Jira after the source issues have been seeded.
 
 ## Authentication, model, and billing
 
-The workflow uses:
+Both agentic workflows use:
 
 ```yaml
 engine: copilot
@@ -30,41 +51,29 @@ permissions:
   copilot-requests: write
 ```
 
-`copilot-requests: write` lets gh-aw use `${{ github.token }}` for Copilot inference. No personal access token or `COPILOT_GITHUB_TOKEN` secret is required. The organization must allow Copilot CLI requests billed to the organization.
+`copilot-requests: write` uses `${{ github.token }}` for Copilot inference and organization billing.
 
-## Try it
-
-Open the [sample issue](../../issues/2), then apply the `preview-jira-refresh` label. The workflow reads the referenced `GHAW-*` issue from Jira Cloud and posts the proposed Jira-to-GitHub changes.
-
-The repository needs:
+Repository secrets:
 
 - `JIRA_TOKEN`: Jira API token or OAuth access token
-- `JIRA_EMAIL`: optional Atlassian account email when `JIRA_TOKEN` is an API token that requires Basic authentication
+- `JIRA_EMAIL`: Atlassian account email when `JIRA_TOKEN` requires Basic authentication
 
-To create another example:
+The Jira network allowlist is restricted to `joshjohanning.atlassian.net`.
 
-1. Create a GitHub issue containing `Jira key: GHAW-<number>`.
-2. Add developer-owned notes or implementation fields.
-3. Apply `preview-jira-refresh`.
+## Demo setup
 
-## Production extension
-
-Extend the deterministic Jira Cloud read adapter:
-
-1. Pass only the normalized Jira response to the agent.
-2. Add field ID mappings for team and organization-specific custom fields.
-3. Use constrained safe outputs to update Jira-owned GitHub fields.
-4. Preserve GitHub-owned sections and comments.
-5. Add idempotency, conflict detection, retries, and audit logging.
-
-The same source-of-truth pattern can target Digital.ai Agility or Azure DevOps by replacing the read adapter and field mappings.
+1. Run **Seed Jira Demo Issues** once to create three `gh-aw-demo` issues in Jira.
+2. Run **Import New Jira Issues** to create their GitHub developer issues.
+3. Change a source issue in Jira.
+4. Apply `sync-from-jira` to the matching GitHub issue.
+5. Watch the Jira-owned section refresh while developer content remains unchanged.
 
 ## Local authoring
 
 ```bash
 gh extension install github/gh-aw
-gh aw compile jira-source-preview
-gh aw validate jira-source-preview
+gh aw compile jira-import-new jira-sync-on-command
+gh aw validate jira-import-new jira-sync-on-command
 ```
 
 The repository is initialized for agentic authoring, so the `agentic-workflows` custom agent can create, update, and debug workflows from GitHub Copilot.

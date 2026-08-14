@@ -1,0 +1,74 @@
+name: Seed Jira Demo Issues
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Jira source issues
+        env:
+          JIRA_BASE_URL: https://joshjohanning.atlassian.net
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$JIRA_EMAIL" ]]; then
+            AUTH_ARGS=(--user "$JIRA_EMAIL:$JIRA_TOKEN")
+          else
+            AUTH_ARGS=(--header "Authorization: Bearer $JIRA_TOKEN")
+          fi
+
+          existing="$(curl --fail-with-body --silent --show-error \
+            "${AUTH_ARGS[@]}" \
+            --header "Accept: application/json" \
+            --get \
+            --data-urlencode "jql=project = GHAW AND labels = gh-aw-demo" \
+            --data-urlencode "maxResults=1" \
+            --data-urlencode "fields=key" \
+            "$JIRA_BASE_URL/rest/api/3/search/jql")"
+
+          if [[ "$(jq '.issues | length' <<<"$existing")" -gt 0 ]]; then
+            echo "Demo Jira issues already exist."
+            exit 0
+          fi
+
+          while IFS='|' read -r summary description; do
+            payload="$(jq -n \
+              --arg summary "$summary" \
+              --arg description "$description" \
+              '{
+                fields: {
+                  project: {key: "GHAW"},
+                  summary: $summary,
+                  issuetype: {name: "Task"},
+                  labels: ["gh-aw-demo"],
+                  description: {
+                    type: "doc",
+                    version: 1,
+                    content: [{
+                      type: "paragraph",
+                      content: [{type: "text", text: $description}]
+                    }]
+                  }
+                }
+              }')"
+
+            curl --fail-with-body --silent --show-error \
+              "${AUTH_ARGS[@]}" \
+              --header "Accept: application/json" \
+              --header "Content-Type: application/json" \
+              --request POST \
+              --data "$payload" \
+              "$JIRA_BASE_URL/rest/api/3/issue" \
+              | jq -r '"Created Jira issue \(.key)"'
+          done <<'ISSUES'
+          Add shipment notification preferences|Allow customers to choose email or SMS delivery notifications and retain their preference.
+          Add delivery exception timeline|Show shipment exception events in a developer-friendly chronological timeline.
+          Add notification preference audit event|Publish an audit event whenever shipment notification preferences change.
+          ISSUES
