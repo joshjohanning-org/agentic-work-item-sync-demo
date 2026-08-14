@@ -34,7 +34,7 @@ jobs:
               "${AUTH_ARGS[@]}" \
               --request DELETE \
               "$JIRA_BASE_URL/rest/api/3/field/$field_id")"
-            if [[ "$status" == "204" ]]; then
+            if [[ "$status" == "204" || "$status" == "303" ]]; then
               echo "Deleted $field_id"
             elif [[ "$status" == "404" ]]; then
               echo "$field_id already absent"
