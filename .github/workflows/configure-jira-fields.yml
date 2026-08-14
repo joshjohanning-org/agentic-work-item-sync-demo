@@ -41,7 +41,7 @@ jobs:
               "$JIRA_BASE_URL$1"
           }
 
-          fields="$(jira_get /rest/api/3/field)"
+          fields="$(jira_get "/rest/api/3/field/search?type=custom&maxResults=100" | jq '.values')"
 
           ensure_field() {
             local name="$1"
@@ -56,7 +56,7 @@ jobs:
                 --arg searcherKey "$searcher" \
                 '{name: $name, description: "GitHub Agentic Workflows demo field", type: $type, searcherKey: $searcherKey}')" \
                 | jq -r .id)"
-              fields="$(jira_get /rest/api/3/field)"
+              fields="$(jira_get "/rest/api/3/field/search?type=custom&maxResults=100" | jq '.values')"
               echo "Created $name as $id" >&2
             else
               echo "Using existing $name as $id" >&2
@@ -83,57 +83,11 @@ jobs:
             "com.atlassian.jira.plugin.system.customfieldtypes:select" \
             "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher")"
 
-          ensure_options() {
-            local field_id="$1"
-            shift
-            local context_id
-            context_id="$(jira_get "/rest/api/3/field/$field_id/context" | jq -r '.values[0].id')"
-            local existing
-            existing="$(jira_get "/rest/api/3/field/$field_id/context/$context_id/option" | jq -r '.values[].value')"
-            local options='[]'
-            local value
-            for value in "$@"; do
-              if ! grep -Fxq "$value" <<<"$existing"; then
-                options="$(jq --arg value "$value" '. + [{value: $value}]' <<<"$options")"
-              fi
-            done
-            if [[ "$(jq length <<<"$options")" -gt 0 ]]; then
-              jira_post "/rest/api/3/field/$field_id/context/$context_id/option" \
-                "$(jq -n --argjson options "$options" '{options: $options}')" \
-                > /dev/null
-            fi
-          }
-
-          update_issue() {
-            local key="$1"
-            local points="$2"
-            local payload
-            payload="$(jq -n \
-              --arg pi_id "$PI_ID" \
-              --arg sprint_id "$SPRINT_ID" \
-              --arg points_id "$STORY_POINTS_ID" \
-              --arg requested_by_id "$REQUESTED_BY_ID" \
-              --argjson points "$points" \
-              '{
-                fields: {
-                  ($pi_id): "PI 1",
-                  ($sprint_id): "Sprint 1",
-                  ($points_id): $points,
-                  ($requested_by_id): "Wally"
-                }
-              }')"
-
-            curl --fail-with-body --silent --show-error \
-              "${AUTH_ARGS[@]}" \
-              --header "Accept: application/json" \
-              --header "Content-Type: application/json" \
-              --request PUT \
-              --data "$payload" \
-              "$JIRA_BASE_URL/rest/api/3/issue/$key" \
-              > /dev/null
-            echo "Updated $key"
-          }
-
-          update_issue GHAW-1 3
-          update_issue GHAW-2 5
-          update_issue GHAW-3 2
+          echo "Jira custom fields are present:"
+          printf '%s\n' \
+            "$PI_ID PI" \
+            "$SPRINT_ID Sprint" \
+            "$STORY_POINTS_ID Story Pts" \
+            "$SOURCE_ID Source" \
+            "$REQUESTED_BY_ID Requested by" \
+            "$PRODUCT_CATEGORY_ID Product category"

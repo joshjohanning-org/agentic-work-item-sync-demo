@@ -1,0 +1,35 @@
+name: Cleanup Jira Field Duplicates
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete duplicate custom fields
+        env:
+          JIRA_BASE_URL: https://joshjohanning.atlassian.net
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          AUTH_ARGS=(--user "$JIRA_EMAIL:$JIRA_TOKEN")
+          for field_id in \
+            customfield_10212 \
+            customfield_10213 \
+            customfield_10214 \
+            customfield_10215 \
+            customfield_10216 \
+            customfield_10217
+          do
+            curl --fail-with-body --silent --show-error \
+              "${AUTH_ARGS[@]}" \
+              --request DELETE \
+              "$JIRA_BASE_URL/rest/api/3/field/$field_id"
+            echo "Deleted $field_id"
+          done

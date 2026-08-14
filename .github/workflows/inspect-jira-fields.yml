@@ -27,13 +27,16 @@ jobs:
           curl --fail-with-body --silent --show-error \
             "${AUTH_ARGS[@]}" \
             --header "Accept: application/json" \
-            "$JIRA_BASE_URL/rest/api/3/field" \
+            "$JIRA_BASE_URL/rest/api/3/field/search?type=custom&maxResults=100" \
             | jq -r '
-                map(select(
-                  (.name | ascii_downcase) as $name
-                  | ["pi", "sprint", "story point", "priority", "source", "team", "requested by", "product category"]
-                  | any($name | contains(.))
-                ))
+                .values
+                | map(select(.name == "PI"
+                  or .name == "Sprint"
+                  or .name == "Story Pts"
+                  or .name == "Source"
+                  or .name == "Team"
+                  or .name == "Requested by"
+                  or .name == "Product category"))
                 | sort_by(.name)
                 | .[]
                 | [.id, .name, (.custom | tostring), (.schema.type // ""), (.schema.custom // "")]
