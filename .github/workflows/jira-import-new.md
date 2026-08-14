@@ -62,7 +62,9 @@ For at most three Jira items that do not yet have a GitHub issue, call `create_i
 - title: `[<Jira key>] <Jira summary>`
 - body:
   - `Jira key: <key>`
+  - `<!-- gh-aw-island-start:jira-sync-on-command -->`
   - a `## Jira source` section with key/link, type, status, priority, project, assignee, parent, dependencies, created time, updated time, and a note that Jira owns the section
+  - `<!-- gh-aw-island-end:jira-sync-on-command -->`
   - a `## Developer notes` section stating that implementation details, checklists, and links added there are GitHub-owned and preserved during refreshes
 
 Preserve Jira facts. Do not invent values. Use `Not mapped` for unavailable fields.
