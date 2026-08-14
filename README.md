@@ -33,7 +33,7 @@ The command label is automatically removed after each run so it can be applied a
 
 | Owner | Fields |
 |---|---|
-| Jira | Key, summary, type, status, priority, project, assignee, parent, dependencies, labels, timestamps |
+| Jira | Key, summary, type, status, priority, PI, sprint, story points, source, team, requested by, product category, project, assignee, parent, dependencies, labels, timestamps |
 | GitHub | Developer notes, implementation details, checklists, links, pull requests, and discussion |
 
 The demo only reads Jira. It never writes changes back to Jira after the source issues have been seeded.
@@ -57,8 +57,23 @@ Repository secrets:
 
 - `JIRA_TOKEN`: Jira API token or OAuth access token
 - `JIRA_EMAIL`: Atlassian account email when `JIRA_TOKEN` requires Basic authentication
+- `GH_AW_WRITE_PROJECT_TOKEN`: GitHub token with organization Projects read/write access
 
 The Jira network allowlist is restricted to `joshjohanning.atlassian.net`.
+
+Project mappings:
+
+| Jira | GitHub |
+|---|---|
+| Status | Project Status |
+| Priority | Priority issue field |
+| Story Pts | Effort issue field: 1-2 Low, 3-5 Medium, 8+ High |
+| PI | Project PI |
+| Sprint | Project Iteration |
+| Source | Project Source, representing work origin |
+| Team | Project Team |
+| Requested by | Project Requested by |
+| Product category | Project Product category |
 
 ## Demo setup
 
