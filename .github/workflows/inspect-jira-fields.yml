@@ -42,3 +42,17 @@ jobs:
                 | [.id, .name, (.custom | tostring), (.schema.type // ""), (.schema.custom // "")]
                 | @tsv
               '
+
+          echo "PROJECT"
+          curl --fail-with-body --silent --show-error \
+            "${AUTH_ARGS[@]}" \
+            --header "Accept: application/json" \
+            "$JIRA_BASE_URL/rest/api/3/project/GHAW" \
+            | jq '{id, key, name, projectTypeKey, simplified, style}'
+
+          echo "EDITABLE FIELDS"
+          curl --fail-with-body --silent --show-error \
+            "${AUTH_ARGS[@]}" \
+            --header "Accept: application/json" \
+            "$JIRA_BASE_URL/rest/api/3/issue/GHAW-1/editmeta" \
+            | jq -r '.fields | to_entries[] | [.key, .value.name] | @tsv'
