@@ -52,10 +52,6 @@ safe-outputs:
     allowed-fields: [Priority, Effort]
     max: 20
     target: "*"
-  update-project:
-    project: https://github.com/orgs/joshjohanning-org/projects/26
-    github-token: ${{ secrets.GH_AW_WRITE_PROJECT_TOKEN }}
-    max: 10
 ---
 
 # Import New Jira Issues
@@ -82,19 +78,7 @@ For at most three Jira items that do not yet have a GitHub issue, call `create_i
 For Jira items that already have a GitHub issue:
 
 1. Use `set_issue_field` to refresh Priority and Effort with the same mappings.
-2. Use `update_project` with:
-   - `project`: `https://github.com/orgs/joshjohanning-org/projects/26`
-   - `content_type`: `issue`
-   - `content_number`: the existing GitHub issue number
-   - `fields` containing only values available from Jira:
-     - `Status`: Jira Backlog, Open, or To Do → `Todo`; In Progress or Selected for Development → `In progress`; Done, Closed, or Resolved → `Done`
-     - `PI`: Jira PI
-     - `Iteration`: Jira Sprint title
-     - `Source`: Jira Source, meaning work origin
-     - `Team`: Jira Team
-     - `Requested by`: Jira Requested by
-     - `Product category`: Jira Product category
 
 Preserve Jira facts. Do not invent values. Use `Not mapped` for unavailable fields.
 
-Do not create duplicates. Newly created issues receive project fields on the next scheduled or manually dispatched run. Call `noop` only when the Jira response is invalid or no create/update action is needed.
+Do not create duplicates. Call `noop` only when the Jira response is invalid or no create/update action is needed.

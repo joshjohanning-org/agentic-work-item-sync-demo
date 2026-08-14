@@ -57,9 +57,17 @@ Repository secrets:
 
 - `JIRA_TOKEN`: Jira API token or OAuth access token
 - `JIRA_EMAIL`: Atlassian account email when `JIRA_TOKEN` requires Basic authentication
-- `GH_AW_WRITE_PROJECT_TOKEN`: GitHub token with organization Projects read/write access
+
+GitHub App configuration for automatic Project writes:
+
+- Repository variable `PROJECT_APP_CLIENT_ID`
+- Repository secret `PROJECT_APP_PRIVATE_KEY`
+- App repository permission: Issues read/write
+- App organization permission: Projects read/write
 
 The Jira network allowlist is restricted to `joshjohanning.atlassian.net`.
+
+`GHAW` is a team-managed Jira project. Jira Cloud does not expose an API for adding global custom fields to a team-managed work type layout. After running **Configure Jira Demo Fields**, add `PI`, `Story Pts`, `Source`, `Requested by`, and `Product category` once through **Project settings → Work types → Task**. Jira already provides Priority, Sprint, and Team.
 
 Project mappings:
 

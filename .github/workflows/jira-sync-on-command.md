@@ -67,10 +67,6 @@ safe-outputs:
     allowed-fields: [Priority, Effort]
     max: 2
     target: "*"
-  update-project:
-    project: https://github.com/orgs/joshjohanning-org/projects/26
-    github-token: ${{ secrets.GH_AW_WRITE_PROJECT_TOKEN }}
-    max: 1
 ---
 
 # Sync GitHub Issue from Jira
@@ -109,19 +105,5 @@ Use `set_issue_field` for the triggering issue:
 
 - Set `Priority` from Jira priority when Jira provides one.
 - Set `Effort` from Jira Story Pts: 1-2 → Low, 3-5 → Medium, 8 or more → High. Omit Effort when Story Pts is unavailable.
-
-Use `update_project` exactly once with:
-
-- `project`: `https://github.com/orgs/joshjohanning-org/projects/26`
-- `content_type`: `issue`
-- `content_number`: the triggering GitHub issue number
-- `fields` containing only values available from Jira:
-  - `Status`: map Jira Backlog, Open, or To Do to `Todo`; In Progress or Selected for Development to `In progress`; Done, Closed, or Resolved to `Done`
-  - `PI`: Jira PI
-  - `Iteration`: Jira Sprint title
-  - `Source`: Jira Source, meaning the work origin such as Customer, Product, Engineering, Support, or Other
-  - `Team`: Jira Team
-  - `Requested by`: Jira Requested by
-  - `Product category`: Jira Product category
 
 Do not write to Jira. Do not invent mappings or IDs. Use `Not mapped` when Jira does not provide a value. Call `noop` with a short reason if the Jira response is invalid.

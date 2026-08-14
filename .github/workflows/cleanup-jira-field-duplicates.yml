@@ -20,6 +20,7 @@ jobs:
           set -euo pipefail
           AUTH_ARGS=(--user "$JIRA_EMAIL:$JIRA_TOKEN")
           for field_id in \
+            customfield_10207 \
             customfield_10212 \
             customfield_10213 \
             customfield_10214 \
@@ -27,9 +28,18 @@ jobs:
             customfield_10216 \
             customfield_10217
           do
-            curl --fail-with-body --silent --show-error \
+            status="$(curl --silent --show-error \
+              --output /tmp/jira-delete-response \
+              --write-out '%{http_code}' \
               "${AUTH_ARGS[@]}" \
               --request DELETE \
-              "$JIRA_BASE_URL/rest/api/3/field/$field_id"
-            echo "Deleted $field_id"
+              "$JIRA_BASE_URL/rest/api/3/field/$field_id")"
+            if [[ "$status" == "204" ]]; then
+              echo "Deleted $field_id"
+            elif [[ "$status" == "404" ]]; then
+              echo "$field_id already absent"
+            else
+              cat /tmp/jira-delete-response
+              exit 1
+            fi
           done

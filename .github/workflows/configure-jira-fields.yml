@@ -67,9 +67,7 @@ jobs:
           PI_ID="$(ensure_field "PI" \
             "com.atlassian.jira.plugin.system.customfieldtypes:textfield" \
             "com.atlassian.jira.plugin.system.customfieldtypes:textsearcher")"
-          SPRINT_ID="$(ensure_field "Sprint" \
-            "com.atlassian.jira.plugin.system.customfieldtypes:textfield" \
-            "com.atlassian.jira.plugin.system.customfieldtypes:textsearcher")"
+          SPRINT_ID="customfield_10020"
           STORY_POINTS_ID="$(ensure_field "Story Pts" \
             "com.atlassian.jira.plugin.system.customfieldtypes:float" \
             "com.atlassian.jira.plugin.system.customfieldtypes:exactnumber")"
@@ -86,7 +84,7 @@ jobs:
           echo "Jira custom fields are present:"
           printf '%s\n' \
             "$PI_ID PI" \
-            "$SPRINT_ID Sprint" \
+            "$SPRINT_ID Sprint (built-in Jira Software field)" \
             "$STORY_POINTS_ID Story Pts" \
             "$SOURCE_ID Source" \
             "$REQUESTED_BY_ID Requested by" \
