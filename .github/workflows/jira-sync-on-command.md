@@ -58,7 +58,7 @@ safe-outputs:
     title:
     body:
     max: 1
-    target: triggering
+    target: "*"
   add-labels:
     allowed: [jira-synced]
     max: 1
@@ -77,7 +77,7 @@ Treat these Jira fields as authoritative: key, summary, issue type, status, prio
 
 Treat developer notes, implementation details, local checklists, links, and issue discussion as GitHub-owned. Preserve them exactly.
 
-Use `update_issue` exactly once:
+Use `update_issue` exactly once and set `issue_number` to the triggering GitHub issue number:
 
 1. Set the title to `[<Jira key>] <Jira summary>`.
 2. Set `operation` to `replace-island`.

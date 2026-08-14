@@ -1,0 +1,41 @@
+name: Inspect Jira Fields
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List relevant Jira fields
+        env:
+          JIRA_BASE_URL: https://joshjohanning.atlassian.net
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$JIRA_EMAIL" ]]; then
+            AUTH_ARGS=(--user "$JIRA_EMAIL:$JIRA_TOKEN")
+          else
+            AUTH_ARGS=(--header "Authorization: Bearer $JIRA_TOKEN")
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            "${AUTH_ARGS[@]}" \
+            --header "Accept: application/json" \
+            "$JIRA_BASE_URL/rest/api/3/field" \
+            | jq -r '
+                map(select(
+                  (.name | ascii_downcase) as $name
+                  | ["pi", "sprint", "story point", "priority", "source", "team", "requested by", "product category"]
+                  | any($name | contains(.))
+                ))
+                | sort_by(.name)
+                | .[]
+                | [.id, .name, (.custom | tostring), (.schema.type // ""), (.schema.custom // "")]
+                | @tsv
+              '
