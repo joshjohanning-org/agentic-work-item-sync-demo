@@ -4,10 +4,10 @@ This public demo shows a label-triggered, AI-assisted synchronization pattern wh
 
 ## Demo flow
 
-1. A GitHub issue references a Jira key such as `SHIP-123`.
+1. A GitHub issue references a Jira key such as `GHAW-1`.
 2. Apply the `preview-jira-refresh` label.
 3. The label starts the `jira-source-preview` agentic workflow and is automatically removed so it can be used again.
-4. Copilot reads the Jira-shaped source record from `.demo/jira/SHIP-123.json`.
+4. A trusted workflow step reads the source issue from Jira Cloud using `secrets.JIRA_TOKEN`.
 5. Copilot compares Jira-owned fields with the GitHub issue and posts a refresh preview.
 
 The preview separates:
@@ -15,7 +15,7 @@ The preview separates:
 - **Jira-owned fields:** title, work item type, status, priority, project, team, assignee, parent, and dependencies
 - **GitHub-owned fields:** developer notes, implementation details, local checklists, links, and discussion
 
-The workflow does not write to Jira and does not overwrite the GitHub issue. It demonstrates the source-of-truth direction and the field ownership model before an integration adapter is added.
+The workflow reads Jira but does not write to Jira or overwrite the GitHub issue. It demonstrates the source-of-truth direction and the field ownership model before constrained GitHub updates are enabled.
 
 ## Authentication, model, and billing
 
@@ -34,25 +34,28 @@ permissions:
 
 ## Try it
 
-Open the [sample issue](../../issues/2), then apply the `preview-jira-refresh` label. The workflow reads `.demo/jira/SHIP-123.json` and posts the proposed Jira-to-GitHub changes.
+Open the [sample issue](../../issues/2), then apply the `preview-jira-refresh` label. The workflow reads the referenced `GHAW-*` issue from Jira Cloud and posts the proposed Jira-to-GitHub changes.
+
+The repository needs:
+
+- `JIRA_TOKEN`: Jira API token or OAuth access token
+- `JIRA_EMAIL`: optional Atlassian account email when `JIRA_TOKEN` is an API token that requires Basic authentication
 
 To create another example:
 
-1. Add a Jira-shaped JSON fixture under `.demo/jira/<KEY>.json`.
-2. Create a GitHub issue containing `Jira key: <KEY>`.
-3. Add developer-owned notes or implementation fields.
-4. Apply `preview-jira-refresh`.
+1. Create a GitHub issue containing `Jira key: GHAW-<number>`.
+2. Add developer-owned notes or implementation fields.
+3. Apply `preview-jira-refresh`.
 
 ## Production extension
 
-Replace the fixture read with a deterministic Jira Cloud adapter:
+Extend the deterministic Jira Cloud read adapter:
 
-1. Fetch `/rest/api/3/issue/{key}` in a trusted workflow step or MCP server.
-2. Store `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` as GitHub Actions secrets.
-3. Pass only the normalized Jira response to the agent.
-4. Use constrained safe outputs to update Jira-owned GitHub fields.
-5. Preserve GitHub-owned sections and comments.
-6. Add idempotency, conflict detection, retries, and audit logging.
+1. Pass only the normalized Jira response to the agent.
+2. Add field ID mappings for team and organization-specific custom fields.
+3. Use constrained safe outputs to update Jira-owned GitHub fields.
+4. Preserve GitHub-owned sections and comments.
+5. Add idempotency, conflict detection, retries, and audit logging.
 
 The same source-of-truth pattern can target Digital.ai Agility or Azure DevOps by replacing the read adapter and field mappings.
 
