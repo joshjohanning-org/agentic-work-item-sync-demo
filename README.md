@@ -1,22 +1,29 @@
 # Agentic work item sync demo
 
-This public demo shows how a GitHub label can trigger an AI-assisted work item synchronization workflow. It uses [GitHub Agentic Workflows](https://github.github.com/gh-aw/) and the built-in `${{ github.token }}` for Copilot inference.
+This public demo shows a label-triggered, AI-assisted synchronization pattern where **Jira is the system of record** and **GitHub is the developer workspace**.
 
 ## Demo flow
 
-1. Open a GitHub issue that represents a work item.
-2. Apply the `preview-agility-sync` label.
-3. The label starts the `work-item-sync` agentic workflow and is automatically removed so it can be used again.
-4. Copilot analyzes the issue, produces a normalized Digital.ai Agility-style payload, and posts a sync preview as an issue comment.
-5. The preview includes field mappings, hierarchy and dependency notes, validation warnings, and the API operation an integration adapter would perform.
+1. A GitHub issue references a Jira key such as `SHIP-123`.
+2. Apply the `preview-jira-refresh` label.
+3. The label starts the `jira-source-preview` agentic workflow and is automatically removed so it can be used again.
+4. Copilot reads the Jira-shaped source record from `.demo/jira/SHIP-123.json`.
+5. Copilot compares Jira-owned fields with the GitHub issue and posts a refresh preview.
 
-The workflow intentionally stops before calling Digital.ai Agility. This keeps the demo safe and makes the integration boundary clear. A production implementation would replace the preview with an approved MCP server or custom safe-output job that owns the Agility API call and credential.
+The preview separates:
 
-## Authentication and billing
+- **Jira-owned fields:** title, work item type, status, priority, project, team, assignee, parent, and dependencies
+- **GitHub-owned fields:** developer notes, implementation details, local checklists, links, and discussion
 
-The workflow declares:
+The workflow does not write to Jira and does not overwrite the GitHub issue. It demonstrates the source-of-truth direction and the field ownership model before an integration adapter is added.
+
+## Authentication, model, and billing
+
+The workflow uses:
 
 ```yaml
+engine: copilot
+model: auto
 permissions:
   contents: read
   issues: read
@@ -27,43 +34,34 @@ permissions:
 
 ## Try it
 
-Use the sample issue, or create an issue with fields such as:
+Open the [sample issue](../../issues/1), then apply the `preview-jira-refresh` label. The workflow reads `.demo/jira/SHIP-123.json` and posts the proposed Jira-to-GitHub changes.
 
-```markdown
-## Description
-Add reusable shipment notification preferences.
+To create another example:
 
-## Acceptance criteria
-- Users can select email or SMS.
-- Preferences persist across sessions.
-
-## External mapping
-- Project: Customer Experience
-- Team: Delivery Notifications
-- Type: Story
-- Parent: GH-100
-```
-
-Apply the `preview-agility-sync` label and watch the Actions run.
+1. Add a Jira-shaped JSON fixture under `.demo/jira/<KEY>.json`.
+2. Create a GitHub issue containing `Jira key: <KEY>`.
+3. Add developer-owned notes or implementation fields.
+4. Apply `preview-jira-refresh`.
 
 ## Production extension
 
-The next step is an integration adapter with:
+Replace the fixture read with a deterministic Jira Cloud adapter:
 
-- a Digital.ai Agility MCP server or custom safe-output job
-- a repository or organization secret for the Agility token
-- deterministic external ID storage for create versus update decisions
-- status, team, project, hierarchy, and relationship mappings
-- idempotency, retries, conflict handling, and audit logging
+1. Fetch `/rest/api/3/issue/{key}` in a trusted workflow step or MCP server.
+2. Store `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` as GitHub Actions secrets.
+3. Pass only the normalized Jira response to the agent.
+4. Use constrained safe outputs to update Jira-owned GitHub fields.
+5. Preserve GitHub-owned sections and comments.
+6. Add idempotency, conflict detection, retries, and audit logging.
 
-The same pattern can target Jira Cloud or Azure DevOps by changing the adapter while keeping the label trigger and normalization prompt.
+The same source-of-truth pattern can target Digital.ai Agility or Azure DevOps by replacing the read adapter and field mappings.
 
 ## Local authoring
 
 ```bash
 gh extension install github/gh-aw
-gh aw compile work-item-sync
-gh aw validate work-item-sync
+gh aw compile jira-source-preview
+gh aw validate jira-source-preview
 ```
 
-The repository is initialized for agentic authoring, so the `agentic-workflows` custom agent can also create, update, and debug workflows from GitHub Copilot.
+The repository is initialized for agentic authoring, so the `agentic-workflows` custom agent can create, update, and debug workflows from GitHub Copilot.

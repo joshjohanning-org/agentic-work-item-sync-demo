@@ -15,16 +15,10 @@ Describe the work item.
 - Criterion one
 - Criterion two
 
-## External mapping
+## Source of truth
 
-- Project:
-- Team:
-- Type: Story
-- Status:
-- Priority:
-- External ID:
+- Jira key:
 
-## Relationships
+## Developer notes
 
-- Parent:
-- Dependencies:
+Add GitHub-owned implementation details, local checklists, links, and notes here.

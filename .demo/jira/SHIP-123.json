@@ -1,0 +1,34 @@
+{
+  "key": "SHIP-123",
+  "url": "https://example.atlassian.net/browse/SHIP-123",
+  "summary": "Add configurable shipment notification preferences",
+  "issueType": "Story",
+  "status": "Ready for Development",
+  "priority": "High",
+  "project": {
+    "key": "SHIP",
+    "name": "Customer Shipping Experience"
+  },
+  "team": "Delivery Notifications",
+  "assignee": {
+    "displayName": "Wally Developer",
+    "email": null
+  },
+  "parent": {
+    "key": "SHIP-100",
+    "summary": "Modernize delivery notifications"
+  },
+  "dependencies": [
+    {
+      "key": "PLAT-42",
+      "relationship": "blocks"
+    }
+  ],
+  "description": "Customers can choose email or SMS notifications and retain their preferences across sessions.",
+  "acceptanceCriteria": [
+    "Users can select email or SMS.",
+    "Preferences persist across sessions.",
+    "Existing users default to email."
+  ],
+  "updated": "2026-08-14T18:00:00Z"
+}
