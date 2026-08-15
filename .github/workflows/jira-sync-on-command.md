@@ -65,6 +65,33 @@ steps:
         --header "Accept: application/json" \
         "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY?fields=summary,description,issuetype,status,priority,project,assignee,parent,issuelinks,labels,updated,customfield_10218,customfield_10020,customfield_10222,customfield_10221,customfield_10001,customfield_10220,customfield_10219" \
         > /tmp/gh-aw/agent/jira-issue.json
+
+      jq '{
+          key: .key,
+          summary: .fields.summary,
+          issue_type: .fields.issuetype.name,
+          status: .fields.status.name,
+          priority: .fields.priority.name,
+          project: .fields.project.name,
+          assignee: (.fields.assignee.displayName // null),
+          parent: (.fields.parent.key // null),
+          issue_links: .fields.issuelinks,
+          updated: .fields.updated,
+          pi: (.fields.customfield_10218.value // null),
+          sprint: ([.fields.customfield_10020[]?.name] | first // null),
+          story_points: .fields.customfield_10222,
+          source: (.fields.customfield_10221.value // null),
+          team: (
+            .fields.customfield_10001.name
+            // .fields.customfield_10001.displayName
+            // .fields.customfield_10001.value
+            // null
+          ),
+          requested_by: .fields.customfield_10220,
+          product_category: (.fields.customfield_10219.value // null)
+        }' \
+        /tmp/gh-aw/agent/jira-issue.json \
+        > /tmp/gh-aw/agent/jira-sync-values.json
   - name: Generate Project read token
     id: project-read-token
     uses: actions/create-github-app-token@v3
@@ -126,6 +153,28 @@ steps:
         | jq --argjson number "$ISSUE_NUMBER" \
           '{items: [.items[] | select(.content.number == $number)]}' \
         > /tmp/gh-aw/agent/github-project-item.json
+
+      jq -n \
+        --slurpfile issue /tmp/gh-aw/agent/github-issue.json \
+        --slurpfile issueFields /tmp/gh-aw/agent/github-issue-fields.json \
+        --slurpfile project /tmp/gh-aw/agent/github-project-item.json \
+        '{
+          issue: {
+            number: $issue[0].number,
+            title: $issue[0].title,
+            body: $issue[0].body
+          },
+          issue_fields: (
+            $issueFields[0].data.repository.issue.issueFieldValues.nodes
+            | map({
+                key: .field.name,
+                value: (.name // .value // null)
+              })
+            | from_entries
+          ),
+          project: ($project[0].items[0] // null)
+        }' \
+        > /tmp/gh-aw/agent/github-sync-values.json
 network:
   allowed:
     - defaults
@@ -418,11 +467,12 @@ safe-outputs:
 
 Read the triggering command label and trusted conflict check from `/tmp/gh-aw/agent/sync-command.json`.
 
-Jira issue data is in `/tmp/gh-aw/agent/jira-issue.json`. The current GitHub issue, organization issue fields, and Project item are in:
+Use the deterministic normalized values in:
 
-- `/tmp/gh-aw/agent/github-issue.json`
-- `/tmp/gh-aw/agent/github-issue-fields.json`
-- `/tmp/gh-aw/agent/github-project-item.json`
+- `/tmp/gh-aw/agent/jira-sync-values.json`
+- `/tmp/gh-aw/agent/github-sync-values.json`
+
+The raw source responses are also available as `jira-issue.json`, `github-issue.json`, `github-issue-fields.json`, and `github-project-item.json` for explanatory context only. Do not derive mapped values from raw files when a normalized value exists.
 
 If both `sync-from-jira` and `sync-to-jira` are currently present, do not synchronize either direction. Add one comment explaining that the commands conflict and remove both command labels.
 
@@ -451,6 +501,7 @@ Then:
   - Jira Team → `Team`
   - Jira Requested by → `Requested by`
   - Jira Product category → `Product category`
+- Include every non-null mapped value from `jira-sync-values.json`. In particular, do not omit `requested_by` or preserve an existing GitHub value when Jira provides one.
 - Remove `sync-from-jira` only after requesting all GitHub updates.
 
 Do not call `update_jira`.
