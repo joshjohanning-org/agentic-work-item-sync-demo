@@ -71,3 +71,22 @@ jobs:
                 team: .fields.customfield_10001,
                 priority: .fields.priority
               }'
+
+          echo "CURRENT SYNC VALUES"
+          curl --fail-with-body --silent --show-error \
+            "${AUTH_ARGS[@]}" \
+            --header "Accept: application/json" \
+            "$JIRA_BASE_URL/rest/api/3/issue/GHAW-1?fields=summary,status,priority,customfield_10218,customfield_10020,customfield_10222,customfield_10221,customfield_10001,customfield_10220,customfield_10219,updated" \
+            | jq '{
+                summary: .fields.summary,
+                status: .fields.status.name,
+                priority: .fields.priority.name,
+                PI: .fields.customfield_10218.value,
+                sprint: [.fields.customfield_10020[]?.name],
+                story_pts: .fields.customfield_10222,
+                source: .fields.customfield_10221.value,
+                team: .fields.customfield_10001,
+                requested_by: .fields.customfield_10220,
+                product_category: .fields.customfield_10219.value,
+                updated: .fields.updated
+              }'
