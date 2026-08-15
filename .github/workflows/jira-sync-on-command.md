@@ -163,6 +163,7 @@ safe-outputs:
     update-jira:
       description: Update the linked Jira issue from explicit GitHub issue and Project field values
       runs-on: ubuntu-latest
+      needs: unlock
       output: Jira work item updated from GitHub
       permissions:
         contents: read
