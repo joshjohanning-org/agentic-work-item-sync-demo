@@ -114,7 +114,7 @@ GitHub wins for every mapped value in this direction. A failed Jira API operatio
 | Priority | Jira Priority | Organization Priority issue field | Both directions by matching option names |
 | Size | Story Pts | Organization Effort issue field | Both directions with a lossy mapping |
 | Program increment | PI | Project PI | Both directions by exact option name |
-| Sprint | Sprint | Project Iteration | Both directions when an exact Jira sprint exists |
+| Sprint | Sprint | Project Iteration | Available only when the Jira board supports sprints and an exact sprint exists |
 | Work origin | Source | Project Source | Both directions by exact option name |
 | Team | Team | Project Team | Both directions only when Jira exposes a matching editable Team option |
 | Requester | Requested by | Project Requested by | Both directions |
@@ -282,7 +282,8 @@ The Copilot agent runs with read-only GitHub access. It does not receive the Jir
 - **Concurrent runs are locked per issue.** The workflow locks the issue while the agent reads and decides, reducing same-item races.
 - **Effort conversion is lossy.** Medium always writes `5`, even if Jira originally contained `3`.
 - **Options require exact names.** PI, Source, Team, Product category, Priority, Iteration, and Sprint names must align.
-- **Sprint synchronization depends on board 3.** GitHub Iteration is pushed only when an exact active or future Jira sprint exists.
+- **The current Jira board is Kanban.** Board 3 reports that it does not support sprints, so the current demo reports Project Iteration as skipped during GitHub-to-Jira synchronization. Sprint writes will work only after using a Scrum board with a matching active or future sprint.
+- **The current Team values do not align.** Project Team `Delivery Notifications` has no exact editable Jira Team option, so the demo reports Team as skipped until a matching Jira team or local dropdown option exists.
 - **Team-managed Jira fields are project-local.** Field IDs and editability differ between Jira projects.
 - **Jira transitions constrain Status.** The desired destination must be available from the issue's current state.
 - **Skipped fields are visible.** The GitHub-to-Jira completion comment lists fields Jira could not update.

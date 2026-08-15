@@ -324,7 +324,14 @@ safe-outputs:
 
                   if (item.effort && item.effort !== "Not mapped") {
                     if (editable.customfield_10222) {
-                      const pointsByEffort = { low: 2, medium: 5, high: 8 };
+                      const pointsByEffort = {
+                        low: 2,
+                        medium: 5,
+                        high: 8,
+                        "2": 2,
+                        "5": 5,
+                        "8": 8,
+                      };
                       const points = pointsByEffort[item.effort.toLowerCase()];
                       if (points) {
                         fields.customfield_10222 = points;
